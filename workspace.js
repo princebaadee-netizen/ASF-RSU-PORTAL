@@ -10,7 +10,7 @@ async function loadWorkspace() {
   const { data, error } = await supabaseClient.auth.getUser();
 
   if (error || !data.user) {
-    window.location.href = "index.html";
+    window.location.href = "login.html";
     return;
   }
 
