@@ -3,7 +3,7 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_8GvFU7sm8pt1N9s8Ingrjg_4074Fzdm
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-let currentDepartment = "";   // your own department (used for uploads)
+let currentDepartment = "";   // your own department (used for uploads/deletes)
 let viewingDepartment = "";   // whichever department you're currently browsing
 
 async function loadWorkspace() {
@@ -78,11 +78,36 @@ async function loadFiles() {
     return;
   }
 
+  const canDelete = viewingDepartment === currentDepartment;
+
   data.forEach((item) => {
     const li = document.createElement("li");
-    li.textContent = item.name;
+    li.textContent = item.name + " ";
+
+    if (canDelete) {
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "Delete";
+      delBtn.addEventListener("click", () => deleteFile(path + "/" + item.name));
+      li.appendChild(delBtn);
+    }
+
     fileListEl.appendChild(li);
   });
+}
+
+async function deleteFile(fullPath) {
+  const confirmed = confirm("Are you sure you want to delete this file? This cannot be undone.");
+  if (!confirmed) return;
+
+  const { error } = await supabaseClient.storage
+    .from("documents")
+    .remove([fullPath]);
+
+  if (error) {
+    alert("Delete failed: " + error.message);
+  } else {
+    loadFiles();
+  }
 }
 
 document.getElementById("uploadBtn").addEventListener("click", async () => {
@@ -96,7 +121,6 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
   }
 
   const file = fileInput.files[0];
-  // Uploads always go to YOUR OWN department, regardless of what you're viewing
   const filePath = currentDepartment + "/" + folder + "/" + file.name;
 
   const { error } = await supabaseClient.storage
