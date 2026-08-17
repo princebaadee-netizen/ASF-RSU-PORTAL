@@ -63,9 +63,12 @@ async function loadDepartmentList() {
 }
 
 async function loadFiles() {
+  const folder = document.getElementById("viewFolderSelect").value;
+  const path = viewingDepartment + "/" + folder;
+
   const { data, error } = await supabaseClient.storage
     .from("documents")
-    .list(viewingDepartment, { limit: 100 });
+    .list(path, { limit: 100 });
 
   const fileListEl = document.getElementById("fileList");
   fileListEl.innerHTML = "";
@@ -107,5 +110,7 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
     if (viewingDepartment === currentDepartment) loadFiles();
   }
 });
+
+document.getElementById("viewFolderSelect").addEventListener("change", loadFiles);
 
 loadWorkspace();

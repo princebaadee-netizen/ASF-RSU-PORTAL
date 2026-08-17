@@ -9,6 +9,7 @@
 
   <h1 id="deptTitle">Loading...</h1>
   <a href="dashboard.html">Back to dashboard</a>
+
   <h2>Browse a department</h2>
   <select id="deptSwitcher">
     <option value="">Loading departments...</option>
@@ -26,6 +27,12 @@
   <p id="uploadStatus"></p>
 
   <h2>Files</h2>
+  <select id="viewFolderSelect">
+    <option value="Monthly Reports">Monthly Reports</option>
+    <option value="Plan of Work">Plan of Work</option>
+    <option value="Programs/Schedule">Programs/Schedule</option>
+    <option value="Inventories">Inventories</option>
+  </select>
   <ul id="fileList">Loading files...</ul>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
