@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Department Workspace — ASF RSU Portal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1 id="deptTitle">Loading...</h1>
+  <a href="dashboard.html">Back to dashboard</a>
+
+  <h2>Upload a file</h2>
+  <select id="folderSelect">
+    <option value="Monthly Reports">Monthly Reports</option>
+    <option value="Plan of Work">Plan of Work</option>
+    <option value="Programs/Schedule">Programs/Schedule</option>
+    <option value="Inventories">Inventories</option>
+  </select>
+  <input type="file" id="fileInput" />
+  <button id="uploadBtn">Upload</button>
+  <p id="uploadStatus"></p>
+
+  <h2>Files</h2>
+  <ul id="fileList">Loading files...</ul>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="workspace.js"></script>
+</body>
+</html>
