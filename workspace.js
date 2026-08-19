@@ -3,8 +3,8 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_8GvFU7sm8pt1N9s8Ingrjg_4074Fzdm
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-let currentDepartment = "";   // your own department (used for uploads/deletes)
-let viewingDepartment = "";   // whichever department you're currently browsing
+let currentDepartment = "";
+let viewingDepartment = "";
 
 async function loadWorkspace() {
   const { data, error } = await supabaseClient.auth.getUser();
@@ -36,7 +36,7 @@ async function loadWorkspace() {
 async function loadDepartmentList() {
   const { data, error } = await supabaseClient
     .from("departments")
-    .select("Name")
+    .select("Name, Parent_group")
     .order("Name", { ascending: true });
 
   const switcher = document.getElementById("deptSwitcher");
@@ -47,12 +47,39 @@ async function loadDepartmentList() {
     return;
   }
 
+  const grouped = {};
+  const standalone = [];
+
   data.forEach((dept) => {
+    if (dept.Parent_group) {
+      if (!grouped[dept.Parent_group]) grouped[dept.Parent_group] = [];
+      grouped[dept.Parent_group].push(dept.Name);
+    } else {
+      standalone.push(dept.Name);
+    }
+  });
+
+  standalone.forEach((name) => {
     const opt = document.createElement("option");
-    opt.value = dept.Name;
-    opt.textContent = dept.Name;
-    if (dept.Name === currentDepartment) opt.selected = true;
+    opt.value = name;
+    opt.textContent = name;
+    if (name === currentDepartment) opt.selected = true;
     switcher.appendChild(opt);
+  });
+
+  Object.keys(grouped).forEach((groupName) => {
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = groupName;
+
+    grouped[groupName].forEach((name) => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      if (name === currentDepartment) opt.selected = true;
+      optgroup.appendChild(opt);
+    });
+
+    switcher.appendChild(optgroup);
   });
 
   switcher.addEventListener("change", () => {
