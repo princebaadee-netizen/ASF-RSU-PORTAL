@@ -3,7 +3,7 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_8GvFU7sm8pt1N9s8Ingrjg_4074Fzdm
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-console.log("Supabase connected:", supabase);
+console.log("Supabase connected:", supabaseClient);
 
 document.getElementById("loginBtn")
 .addEventListener("click", async() => {
@@ -15,9 +15,14 @@ document.getElementById("loginBtn")
     });
 
     if(error) {
-        document.getElementByid("errorMsg").textContent = error.message;
+        document.getElementById("errorMsg").textContent = error.message;
     } else{
         document.getElementById("errorMsg").textContent = "";
         window.location.href = "dashboard.html";
     }
+});
+
+document.getElementById("showPassword").addEventListener("change", function () {
+  const passwordField = document.getElementById("password");
+  passwordField.type = this.checked ? "text" : "password";
 });

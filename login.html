@@ -1,24 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <title>Log in — ASF RSU Portal</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="login-box">
-        <h1>ASF RSU Document Portal</h1>
-        <p>sign in to your department workspace</p>
-
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Password">
-        <button id="loginBtn">Login</button>
-
-        <p id="errorMsg" style="color: red;"></p>
+  <div class="login-box">
+    <div class="welcome-section">
+      <h1>Welcome to ASF RSU Document Portal</h1>
+      <p>Sign in to your department workspace</p>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="int.js"></script>
+
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+
+    <label>
+      <input type="checkbox" id="showPassword" />
+      Show password
+    </label>
+
+    <button id="loginBtn">Log in</button>
+
+    <p id="errorMsg" style="color: red;"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="int.js"></script>
 </body>
-</html>  
+</html>
