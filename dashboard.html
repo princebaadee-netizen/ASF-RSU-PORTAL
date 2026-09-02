@@ -3,15 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Dashboard — ASF RSU Portal</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    
-    <a href="workspace.html">Go to my department workspace</a>
-    <h1>welcome to the Dashboard</h1>
-    <p id="userEmail">Loading....</p>
-    <button id="logoutBtn">Logout</button>
+    <header>
+        <h1>Welcome to the Dashboard</h1>
+        <button id="logoutBtn">Logout</button>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="workspace.html">Go to my department workspace</a></li>
+            <li><a href="archive.html">Archive</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <p id="userEmail">Loading....</p>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="dashboard.js"></script>
