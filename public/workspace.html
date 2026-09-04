@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Department Workspace — ASF RSU Portal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <a href="home.html" aria-label="ASF RSU Portal home">
+      <img src="download.jpg" alt="ASF RSU Portal logo" class="logo">
+    </a>
+    <nav>
+      <a href="home.html">Home</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="archive.html">Archive</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1 id="deptTitle">Loading...</h1>
+
+    <section class="workspace-section">
+      <h2>Browse a department</h2>
+      <p class="section-hint">See any department's records — uploads and deletes stay limited to your own.</p>
+      <select id="deptSwitcher">
+        <option value="">Loading departments...</option>
+      </select>
+    </section>
+
+    <section class="workspace-section">
+      <h2>Upload documents</h2>
+      <p class="section-hint">Uploads always go into your own department's folders.</p>
+      <select id="folderSelect">
+        <option value="Monthly Reports">Monthly Reports</option>
+        <option value="Plan of Work">Plan of Work</option>
+        <option value="Programs/Schedule">Programs/Schedule</option>
+        <option value="Inventories">Inventories</option>
+      </select>
+      <label for="fileInput">Choose one or more documents</label>
+      <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif,.webp" />
+      <label for="folderInput">Or choose a folder</label>
+      <input type="file" id="folderInput" webkitdirectory directory multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif,.webp" />
+      <button id="uploadBtn">Upload</button>
+      <p id="uploadStatus"></p>
+    </section>
+
+    <section class="workspace-section">
+      <h2>Files</h2>
+      <select id="viewFolderSelect">
+        <option value="Monthly Reports">Monthly Reports</option>
+        <option value="Plan of Work">Plan of Work</option>
+        <option value="Programs/Schedule">Programs/Schedule</option>
+        <option value="Inventories">Inventories</option>
+      </select>
+      <input type="text" id="workspaceSearchInput" placeholder="Search files in this folder..." />
+      <ul id="fileList">Loading files...</ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>ASF RSU Document Portal &middot; <a href="mailto:asfrsu.portal@example.com">asfrsu.portal@example.com</a></p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="workspace.js"></script>
+</body>
+</html>

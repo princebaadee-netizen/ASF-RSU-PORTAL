@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin — ASF RSU Portal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <a href="home.html" aria-label="ASF RSU Portal home">
+      <img src="download.jpg" alt="ASF RSU Portal logo" class="logo">
+    </a>
+    <nav>
+      <a href="home.html">Home</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="workspace.html">Workspace</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1 id="adminTitle">Admin Panel</h1>
+    <p id="adminRole"></p>
+
+    <section class="workspace-section">
+      <h2>Invite a new user</h2>
+      <form id="inviteForm">
+        <input type="email" id="inviteEmail" placeholder="Email address" required />
+        <select id="inviteDept">
+          <option value="">Loading departments...</option>
+        </select>
+        <select id="inviteRole">
+          <option value="departmental_head">Departmental Head</option>
+          <option value="executive">Executive</option>
+        </select>
+        <button type="submit" id="inviteBtn">Send invite</button>
+        <p id="inviteMsg"></p>
+      </form>
+    </section>
+
+    <section class="workspace-section">
+      <h2>Users</h2>
+      <input type="text" id="userSearchInput" placeholder="Search by name or department..." />
+      <table id="userTable">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Role</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody">
+          <tr><td colspan="4">Loading users...</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <p>ASF RSU Document Portal &middot; <a href="mailto:asfrsu.portal@example.com">asfrsu.portal@example.com</a></p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
