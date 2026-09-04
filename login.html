@@ -7,7 +7,16 @@
 </head>
 <body>
 
-  <div class="login-box">
+  <header>
+    <a href="home.html" aria-label="ASF RSU Portal home">
+      <img src="download.jpg" alt="ASF RSU Portal logo" class="logo">
+    </a>
+    <nav>
+      <a href="home.html">Home</a>
+    </nav>
+  </header>
+
+  <form class="login-box" id="loginForm">
     <div class="welcome-section">
       <h1>Welcome to ASF RSU Document Portal</h1>
       <p>Sign in to your department workspace</p>
@@ -21,12 +30,19 @@
       Show password
     </label>
 
-    <button id="loginBtn">Log in</button>
+    <button id="loginBtn" type="submit">Log in</button>
 
     <p id="errorMsg" style="color: red;"></p>
-  </div>
+
+    <p class="forgot-link"><a href="reset-password.html">Forgot password?</a></p>
+  </form>
+
+  <footer>
+    <p>ASF RSU Document Portal &middot; <a href="mailto:asfrsu.portal@example.com">asfrsu.portal@example.com</a></p>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
   <script src="int.js"></script>
 </body>
 </html>

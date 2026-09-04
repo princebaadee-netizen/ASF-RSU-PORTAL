@@ -7,8 +7,19 @@
 </head>
 <body>
 
-  <h1>Archive</h1>
-  <a href="dashboard.html">Back to dashboard</a>
+  <header>
+    <a href="home.html" aria-label="ASF RSU Portal home">
+      <img src="download.jpg" alt="ASF RSU Portal logo" class="logo">
+    </a>
+    <nav>
+      <a href="home.html">Home</a>
+      <a href="dashboard.html">Dashboard</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Archive</h1>
+    <a href="dashboard.html">Back to dashboard</a>
 
   <h2>Browse</h2>
   <select id="archDeptSelect">
@@ -25,9 +36,15 @@
   <input type="text" id="archSearchInput" placeholder="Search by file name..." />
 
   <h2>Files</h2>
-  <ul id="archFileList">Choose a department and folder to begin.</ul>
+    <ul id="archFileList">Choose a department and folder to begin.</ul>
+  </main>
+
+  <footer>
+    <p>ASF RSU Document Portal &middot; <a href="mailto:asfrsu.portal@example.com">asfrsu.portal@example.com</a></p>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
   <script src="archive.js"></script>
 </body>
 </html>

@@ -1,24 +1,35 @@
-const SUPABASE_URL = "https://buywrhouqomubszwfqck.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_8GvFU7sm8pt1N9s8Ingrjg_4074Fzdm";
+document.getElementById("loginForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-
-console.log("Supabase connected:", supabaseClient);
-
-document.getElementById("loginBtn")
-.addEventListener("click", async() => {
-    const email = document.getElementById("email").value;
+    const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
+    const loginButton = document.getElementById("loginBtn");
+    const errorMessage = document.getElementById("errorMsg");
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email,
-        password: password,
-    });
+    if (!email || !password) {
+        errorMessage.textContent = "Enter your email and password.";
+        return;
+    }
 
-    if(error) {
-        document.getElementById("errorMsg").textContent = error.message;
-    } else{
-        document.getElementById("errorMsg").textContent = "";
-        window.location.href = "dashboard.html";
+    loginButton.disabled = true;
+    loginButton.textContent = "Logging in...";
+    errorMessage.textContent = "";
+
+    try {
+        const { error } = await supabaseClient.auth.signInWithPassword({ email,
+            password,
+        });
+
+        if (error) {
+            errorMessage.textContent = error.message;
+        } else {
+            window.location.href = "dashboard.html";
+        }
+    } catch (error) {
+        errorMessage.textContent = "Unable to log in right now. Please try again.";
+    } finally {
+        loginButton.disabled = false;
+        loginButton.textContent = "Log in";
     }
 });
 

@@ -1,17 +1,9 @@
-const SUPABASE_URL = "https://buywrhouqomubszwfqck.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_8GvFU7sm8pt1N9s8Ingrjg_4074Fzdm";
-
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-
 let allFiles = [];
+let renderVersion = 0;
 
 async function loadArchive() {
-  const { data, error } = await supabaseClient.auth.getUser();
-
-  if (error || !data.user) {
-    window.location.href = "login.html";
-    return;
-  }
+  const user = await requireAuth();
+  if (!user) return;
 
   await loadDepartments();
   loadFiles();
@@ -31,6 +23,11 @@ async function loadDepartments() {
     return;
   }
 
+  const sharedOpt = document.createElement("option");
+  sharedOpt.value = "Shared";
+  sharedOpt.textContent = "Shared (Fellowship-wide)";
+  select.appendChild(sharedOpt);
+
   data.forEach((dept) => {
     const opt = document.createElement("option");
     opt.value = dept.Name;
@@ -40,6 +37,7 @@ async function loadDepartments() {
 }
 
 async function loadFiles() {
+  renderVersion++;
   const dept = document.getElementById("archDeptSelect").value;
   const folder = document.getElementById("archFolderSelect").value;
 
@@ -47,12 +45,12 @@ async function loadFiles() {
 
   const path = dept + "/" + folder;
 
+  const listEl = document.getElementById("archFileList");
+  listEl.innerHTML = '<li class="loading">Loading files...</li>';
+
   const { data, error } = await supabaseClient.storage
     .from("documents")
     .list(path, { limit: 100 });
-
-  const listEl = document.getElementById("archFileList");
-  listEl.innerHTML = "";
 
   if (error || !data || data.length === 0) {
     allFiles = [];
@@ -60,11 +58,12 @@ async function loadFiles() {
     return;
   }
 
-  allFiles = data;
+  allFiles = data.filter((item) => item.id);
   renderFiles(allFiles);
 }
 
-function renderFiles(files) {
+async function renderFiles(files) {
+  const currentRender = ++renderVersion;
   const listEl = document.getElementById("archFileList");
   listEl.innerHTML = "";
 
@@ -73,14 +72,45 @@ function renderFiles(files) {
     return;
   }
 
-  files.forEach((item) => {
+  for (const item of files) {
+    if (currentRender !== renderVersion) return;
+
     const li = document.createElement("li");
-    const uploadDate = item.created_at
-      ? new Date(item.created_at).toLocaleDateString()
-      : "Unknown date";
-    li.textContent = item.name + " — uploaded " + uploadDate;
+    const meta = [];
+    if (item.metadata && item.metadata.size) meta.push(formatFileSize(item.metadata.size));
+    if (item.metadata && item.metadata.mimetype) meta.push(item.metadata.mimetype);
+    if (item.created_at) meta.push("uploaded " + formatDate(item.created_at));
+
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "file-name";
+    nameSpan.textContent = item.name;
+    li.appendChild(nameSpan);
+
+    if (meta.length) {
+      const metaSpan = document.createElement("span");
+      metaSpan.className = "file-meta";
+      metaSpan.textContent = meta.join(" \u00B7 ");
+      li.appendChild(metaSpan);
+    }
+
+    const dept = document.getElementById("archDeptSelect").value;
+    const folder = document.getElementById("archFolderSelect").value;
+    const { data: signedUrl, error: urlError } = await supabaseClient.storage
+      .from("documents")
+      .createSignedUrl(dept + "/" + folder + "/" + item.name, 300);
+
+    if (!urlError && signedUrl?.signedUrl) {
+      const downloadLink = document.createElement("a");
+      downloadLink.href = signedUrl.signedUrl;
+      downloadLink.textContent = "Download";
+      downloadLink.target = "_blank";
+      downloadLink.rel = "noopener";
+      li.appendChild(downloadLink);
+    }
+
+    if (currentRender !== renderVersion) return;
     listEl.appendChild(li);
-  });
+  }
 }
 
 document.getElementById("archDeptSelect").addEventListener("change", loadFiles);
