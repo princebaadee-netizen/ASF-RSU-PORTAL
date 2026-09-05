@@ -107,17 +107,45 @@ function updateUploadVisibility() {
   uploadSection.style.display = (isOwnDept || isShared) ? "" : "none";
 }
 
+async function deepList(folderPath, depth = 0) {
+  const { data, error } = await supabaseClient.storage
+    .from("documents")
+    .list(folderPath, { limit: 200 });
+
+  if (error || !data) return { files: [], error };
+
+  const files = [];
+  const subFolders = [];
+
+  for (const item of data) {
+    if (item.id) {
+      files.push({ ...item, folderPath });
+    } else if (item.name && item.metadata === null && depth < 5) {
+      subFolders.push(item.name);
+    }
+  }
+
+  for (const sub of subFolders) {
+    const deeper = await deepList(folderPath + "/" + sub, depth + 1);
+    if (deeper.error) return { files: [], error: deeper.error };
+    files.push(...deeper.files);
+  }
+
+  return { files };
+}
+
+let currentFilesBasePath = "";
+
 async function loadFiles() {
   renderVersion++;
   const folder = document.getElementById("viewFolderSelect").value;
   const path = viewingIsShared ? "Shared/" + folder : viewingDepartment + "/" + folder;
+  currentFilesBasePath = path;
 
   const fileListEl = document.getElementById("fileList");
   fileListEl.innerHTML = '<li class="loading">Loading files...</li>';
 
-  const { data, error } = await supabaseClient.storage
-    .from("documents")
-    .list(path, { limit: 100 });
+  const { files, error } = await deepList(path);
 
   if (error) {
     currentFiles = [];
@@ -125,15 +153,13 @@ async function loadFiles() {
     return;
   }
 
-  if (!data || data.length === 0) {
+  if (files.length === 0) {
     currentFiles = [];
     fileListEl.innerHTML = "<li>No files yet.</li>";
     return;
   }
 
-  currentFiles = data
-    .filter((item) => item.id)
-    .map((item) => ({ ...item, folderPath: path }));
+  currentFiles = files;
   renderFileList(currentFiles);
 }
 
@@ -164,6 +190,13 @@ async function renderFileList(files) {
     nameSpan.className = "file-name";
     nameSpan.textContent = item.name;
     li.appendChild(nameSpan);
+
+    if (item.folderPath && item.folderPath.length > currentFilesBasePath.length) {
+      const subSpan = document.createElement("span");
+      subSpan.className = "file-subfolder";
+      subSpan.textContent = "in " + item.folderPath.slice(currentFilesBasePath.length + 1) + "/";
+      li.appendChild(subSpan);
+    }
 
     if (meta.length) {
       const metaSpan = document.createElement("span");

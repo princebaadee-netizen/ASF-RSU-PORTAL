@@ -413,6 +413,13 @@ ul li:last-child, ol li:last-child {
   flex-basis: 100%;
 }
 
+.file-subfolder {
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-style: italic;
+  flex-basis: 100%;
+}
+
 /* Tables (admin views) */
 
 table {
