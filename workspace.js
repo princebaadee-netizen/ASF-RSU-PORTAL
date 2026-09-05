@@ -248,15 +248,18 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
     }
 
     if (failedFiles.length) {
-      statusEl.textContent = failedFiles.length + " upload(s) failed. Check the selected files and try again.";
+      statusEl.textContent = failedFiles.length + " upload(s) failed: " + failedFiles[0];
+      statusEl.style.color = "var(--danger)";
     } else {
       statusEl.textContent = selectedFiles.length + " document(s) uploaded successfully!";
+      statusEl.style.color = "";
       fileInput.value = "";
       folderInput.value = "";
       if (viewingIsShared || viewingDepartment === currentDepartment) await loadFiles();
     }
   } catch (error) {
-    statusEl.textContent = "Upload failed. Please try again.";
+    statusEl.textContent = "Upload failed: " + (error && error.message ? error.message : "please try again.");
+    statusEl.style.color = "var(--danger)";
   } finally {
     uploadButton.disabled = false;
   }
