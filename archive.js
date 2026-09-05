@@ -19,6 +19,7 @@ async function loadArchive() {
   }
 
   await loadDepartments();
+  await discoverRootFolders();
   loadFiles();
 }
 
@@ -47,31 +48,44 @@ async function loadDepartments() {
     opt.textContent = dept.Name;
     select.appendChild(opt);
   });
+
+  const optionValues = Array.from(select.querySelectorAll("option"))
+    .map((o) => o.value)
+    .filter(Boolean);
+  currentDept = matchDepartmentName(currentDept, optionValues);
+  select.value = currentDept;
+  const currentTitle = document.getElementById("archTitle");
+  if (currentTitle) currentTitle.textContent = currentDept + " Archive";
 }
 
 async function loadFiles() {
   renderVersion++;
   const dept = document.getElementById("archDeptSelect").value;
   const folder = document.getElementById("archFolderSelect").value;
+  const deptStorage = dept === "Shared" ? "Shared" : resolveFolderName(dept);
 
   if (!dept) return;
 
-  const path = dept + "/" + folder;
+  const path = deptStorage + "/" + folder;
 
   const listEl = document.getElementById("archFileList");
   listEl.innerHTML = '<li class="loading">Loading files...</li>';
 
-  const { data, error } = await supabaseClient.storage
-    .from("documents")
-    .list(path, { limit: 100 });
+  const { files, error } = await deepListStorage(path);
 
-  if (error || !data || data.length === 0) {
+  if (error) {
+    allFiles = [];
+    listEl.innerHTML = "<li>Error loading files: " + error.message + "</li>";
+    return;
+  }
+
+  if (files.length === 0) {
     allFiles = [];
     listEl.innerHTML = "<li>No files found here.</li>";
     return;
   }
 
-  allFiles = data.filter((item) => item.id);
+  allFiles = files;
   renderFiles(allFiles);
 }
 
@@ -86,7 +100,8 @@ async function renderFiles(files) {
   }
 
   const dept = document.getElementById("archDeptSelect").value;
-  const folder = document.getElementById("archFolderSelect").value;
+  const deptStorage = dept === "Shared" ? "Shared" : resolveFolderName(dept);
+  const path = deptStorage + "/" + document.getElementById("archFolderSelect").value;
   const canDelete = dept === "Shared"
     ? currentRole === "executive"
     : dept === currentDept;
@@ -105,6 +120,13 @@ async function renderFiles(files) {
     nameSpan.textContent = item.name;
     li.appendChild(nameSpan);
 
+    if (item.folderPath && item.folderPath.length > path.length) {
+      const subSpan = document.createElement("span");
+      subSpan.className = "file-subfolder";
+      subSpan.textContent = "in " + item.folderPath.slice(path.length + 1) + "/";
+      li.appendChild(subSpan);
+    }
+
     if (meta.length) {
       const metaSpan = document.createElement("span");
       metaSpan.className = "file-meta";
@@ -112,9 +134,10 @@ async function renderFiles(files) {
       li.appendChild(metaSpan);
     }
 
+    const fullPath = item.folderPath + "/" + item.name;
     const { data: signedUrl, error: urlError } = await supabaseClient.storage
       .from("documents")
-      .createSignedUrl(dept + "/" + folder + "/" + item.name, 300);
+      .createSignedUrl(fullPath, 300);
 
     if (!urlError && signedUrl?.signedUrl) {
       const downloadLink = document.createElement("a");
@@ -129,7 +152,7 @@ async function renderFiles(files) {
       const delBtn = document.createElement("button");
       delBtn.textContent = "Delete";
       delBtn.addEventListener("click", () =>
-        deleteFile(dept + "/" + folder + "/" + item.name)
+        deleteFile(fullPath)
       );
       li.appendChild(delBtn);
     }

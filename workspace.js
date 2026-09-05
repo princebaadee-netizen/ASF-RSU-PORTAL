@@ -4,7 +4,6 @@ let viewingDepartment = "";
 let viewingIsShared = false;
 let currentFiles = [];
 let renderVersion = 0;
-let rootFolderNames = null;
 let currentDepartmentStorage = "";
 let viewDepartmentStorage = "";
 
@@ -25,52 +24,20 @@ async function loadWorkspace() {
 
   currentDepartment = profile.department;
   currentRole = profile.role;
-  viewingDepartment = profile.department;
   document.getElementById("deptTitle").textContent = currentDepartment + " Workspace";
 
   await loadDepartmentList();
   await discoverRootFolders();
+  const optionValues = Array.from(document.querySelectorAll("#deptSwitcher option"))
+    .map((o) => o.value)
+    .filter(Boolean);
+  currentDepartment = matchDepartmentName(profile.department, optionValues);
+  viewingDepartment = currentDepartment;
+  document.getElementById("deptSwitcher").value = currentDepartment;
   currentDepartmentStorage = resolveFolderName(currentDepartment);
   viewDepartmentStorage = resolveFolderName(viewingDepartment);
   updateUploadVisibility();
   loadFiles();
-}
-
-async function discoverRootFolders() {
-  const { data, error } = await supabaseClient.storage
-    .from("documents")
-    .list("", { limit: 200 });
-
-  if (error || !data) {
-    rootFolderNames = [];
-    return;
-  }
-
-  rootFolderNames = data
-    .filter((item) => item.metadata === null && item.name && item.name !== "Shared")
-    .map((item) => item.name);
-}
-
-function resolveFolderName(displayName) {
-  if (!rootFolderNames || rootFolderNames.length === 0) return displayName;
-
-  const exact = rootFolderNames.find((f) => f === displayName);
-  if (exact) return exact;
-
-  const lower = displayName.toLowerCase();
-  const caseInsensitive = rootFolderNames.find((f) => f.toLowerCase() === lower);
-  if (caseInsensitive) return caseInsensitive;
-
-  const fuzzy = rootFolderNames.find((f) => {
-    const a = f.toLowerCase();
-    const b = lower;
-    return a.length >= 4 && b.length >= 4
-      ? a.startsWith(b) || b.startsWith(a)
-      : a === b;
-  });
-  if (fuzzy) return fuzzy;
-
-  return displayName;
 }
 
 async function loadDepartmentList() {
@@ -151,33 +118,6 @@ function updateUploadVisibility() {
   uploadSection.style.display = (isOwnDept || isShared) ? "" : "none";
 }
 
-async function deepList(folderPath, depth = 0) {
-  const { data, error } = await supabaseClient.storage
-    .from("documents")
-    .list(folderPath, { limit: 200 });
-
-  if (error || !data) return { files: [], error };
-
-  const files = [];
-  const subFolders = [];
-
-  for (const item of data) {
-    if (item.id) {
-      files.push({ ...item, folderPath });
-    } else if (item.name && item.metadata === null && depth < 5) {
-      subFolders.push(item.name);
-    }
-  }
-
-  for (const sub of subFolders) {
-    const deeper = await deepList(folderPath + "/" + sub, depth + 1);
-    if (deeper.error) return { files: [], error: deeper.error };
-    files.push(...deeper.files);
-  }
-
-  return { files };
-}
-
 let currentFilesBasePath = "";
 
 async function loadFiles() {
@@ -189,7 +129,7 @@ async function loadFiles() {
   const fileListEl = document.getElementById("fileList");
   fileListEl.innerHTML = '<li class="loading">Loading files...</li>';
 
-  const { files, error } = await deepList(path);
+  const { files, error } = await deepListStorage(path);
 
   if (error) {
     currentFiles = [];
