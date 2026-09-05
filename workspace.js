@@ -6,6 +6,7 @@ let currentFiles = [];
 let renderVersion = 0;
 let currentDepartmentStorage = "";
 let viewDepartmentStorage = "";
+const selectedPaths = new Set();
 
 async function loadWorkspace() {
   const user = await requireAuth();
@@ -134,6 +135,8 @@ let currentFilesBasePath = "";
 
 async function loadFiles() {
   renderVersion++;
+  selectedPaths.clear();
+  updateBulkBar();
   const folder = document.getElementById("viewFolderSelect").value;
   const path = viewingIsShared ? "Shared/" + folder : viewDepartmentStorage + "/" + folder;
   currentFilesBasePath = path;
@@ -176,11 +179,19 @@ async function renderFileList(files) {
   for (const item of files) {
     if (currentRender !== renderVersion) return;
 
+    const fullPath = item.folderPath + "/" + item.name;
     const li = document.createElement("li");
     const meta = [];
     if (item.metadata && item.metadata.size) meta.push(formatFileSize(item.metadata.size));
     if (item.metadata && item.metadata.mimetype) meta.push(item.metadata.mimetype);
     if (item.created_at) meta.push(formatDate(item.created_at));
+
+    const selectBox = document.createElement("input");
+    selectBox.type = "checkbox";
+    selectBox.className = "file-select";
+    selectBox.value = fullPath;
+    selectBox.checked = selectedPaths.has(fullPath);
+    li.appendChild(selectBox);
 
     const nameSpan = document.createElement("span");
     nameSpan.className = "file-name";
@@ -203,7 +214,7 @@ async function renderFileList(files) {
 
     const { data: signedUrl, error: urlError } = await supabaseClient.storage
       .from("documents")
-      .createSignedUrl(item.folderPath + "/" + item.name, 300);
+      .createSignedUrl(fullPath, 300);
 
     if (!urlError && signedUrl?.signedUrl) {
       const downloadLink = document.createElement("a");
@@ -217,7 +228,7 @@ async function renderFileList(files) {
     if (canDelete) {
       const delBtn = document.createElement("button");
       delBtn.textContent = "Delete";
-      delBtn.addEventListener("click", () => deleteFile(item.folderPath + "/" + item.name));
+      delBtn.addEventListener("click", () => deleteFile(fullPath));
       li.appendChild(delBtn);
     }
 
@@ -306,6 +317,80 @@ document.getElementById("workspaceSearchInput").addEventListener("input", functi
   const term = this.value.toLowerCase();
   const filtered = currentFiles.filter((item) => item.name.toLowerCase().includes(term));
   renderFileList(filtered);
+});
+
+const bulkFileListEl = document.getElementById("fileList");
+const bulkSelectAllEl = document.getElementById("bulkSelectAll");
+const bulkCountEl = document.getElementById("bulkCount");
+const bulkDownloadBtn = document.getElementById("bulkDownloadBtn");
+const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+
+function currentDeletable() {
+  return viewingIsShared
+    ? currentRole === "executive"
+    : viewingDepartment === currentDepartment;
+}
+
+function updateBulkBar() {
+  const count = selectedPaths.size;
+  bulkCountEl.textContent = count + " selected";
+  bulkDownloadBtn.disabled = count === 0;
+  bulkDeleteBtn.disabled = count === 0 || !currentDeletable();
+  const visible = bulkFileListEl.querySelectorAll(".file-select");
+  bulkSelectAllEl.checked = visible.length > 0 && count === visible.length;
+}
+
+bulkSelectAllEl.addEventListener("change", function () {
+  selectedPaths.clear();
+  bulkFileListEl.querySelectorAll(".file-select").forEach((cb) => {
+    cb.checked = this.checked;
+    if (this.checked) selectedPaths.add(cb.value);
+  });
+  updateBulkBar();
+});
+
+bulkFileListEl.addEventListener("change", (e) => {
+  if (!e.target.classList.contains("file-select")) return;
+  if (e.target.checked) {
+    selectedPaths.add(e.target.value);
+  } else {
+    selectedPaths.delete(e.target.value);
+  }
+  updateBulkBar();
+});
+
+bulkDownloadBtn.addEventListener("click", async () => {
+  const paths = Array.from(selectedPaths);
+  for (const fullPath of paths) {
+    const { data } = await supabaseClient.storage
+      .from("documents")
+      .createSignedUrl(fullPath, 300);
+    if (data?.signedUrl) {
+      const a = document.createElement("a");
+      a.href = data.signedUrl;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.click();
+    }
+  }
+});
+
+bulkDeleteBtn.addEventListener("click", async () => {
+  const paths = Array.from(selectedPaths);
+  if (!paths.length) return;
+  const confirmed = confirm("Delete " + paths.length + " selected file(s)? This cannot be undone.");
+  if (!confirmed) return;
+
+  const { error } = await supabaseClient.storage
+    .from("documents")
+    .remove(paths);
+
+  if (error) {
+    alert("Delete failed: " + error.message);
+  } else {
+    selectedPaths.clear();
+    loadFiles();
+  }
 });
 
 loadWorkspace();

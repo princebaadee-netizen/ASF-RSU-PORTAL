@@ -12,6 +12,7 @@
   --text-soft: #5B645E;
   --border: #DDE3DA;
   --danger: #A6402F;
+  --accent: #2F6B4F;
 }
 
 * {
@@ -418,6 +419,53 @@ ul li:last-child, ol li:last-child {
   color: var(--accent);
   font-style: italic;
   flex-basis: 100%;
+}
+
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.bulk-bar button {
+  padding: 0.35rem 0.75rem;
+}
+
+.bulk-select-all {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.bulk-select-all input {
+  cursor: pointer;
+}
+
+input.file-select {
+  margin-right: 0.5rem;
+  cursor: pointer;
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /* Tables (admin views) */

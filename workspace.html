@@ -55,6 +55,12 @@
         <option value="Inventories">Inventories</option>
       </select>
       <input type="text" id="workspaceSearchInput" placeholder="Search files in this folder..." />
+      <div class="bulk-bar">
+        <label class="bulk-select-all"><input type="checkbox" id="bulkSelectAll"> Select all</label>
+        <span id="bulkCount">0 selected</span>
+        <button id="bulkDownloadBtn" disabled>Download selected</button>
+        <button id="bulkDeleteBtn" class="btn-danger" disabled>Delete selected</button>
+      </div>
       <ul id="fileList">Loading files...</ul>
     </section>
   </main>

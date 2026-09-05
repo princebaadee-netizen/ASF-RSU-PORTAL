@@ -2,6 +2,7 @@ let allFiles = [];
 let renderVersion = 0;
 let currentDept = "";
 let currentRole = "";
+const selectedPaths = new Set();
 
 async function loadArchive() {
   const user = await requireAuth();
@@ -71,6 +72,8 @@ async function loadDepartments() {
 
 async function loadFiles() {
   renderVersion++;
+  selectedPaths.clear();
+  updateBulkBar();
   const dept = document.getElementById("archDeptSelect").value;
   const folder = document.getElementById("archFolderSelect").value;
   const deptStorage = dept === "Shared" ? "Shared" : resolveFolderName(dept);
@@ -120,11 +123,19 @@ async function renderFiles(files) {
   for (const item of files) {
     if (currentRender !== renderVersion) return;
 
+    const fullPath = item.folderPath + "/" + item.name;
     const li = document.createElement("li");
     const meta = [];
     if (item.metadata && item.metadata.size) meta.push(formatFileSize(item.metadata.size));
     if (item.metadata && item.metadata.mimetype) meta.push(item.metadata.mimetype);
     if (item.created_at) meta.push("uploaded " + formatDate(item.created_at));
+
+    const selectBox = document.createElement("input");
+    selectBox.type = "checkbox";
+    selectBox.className = "file-select";
+    selectBox.value = fullPath;
+    selectBox.checked = selectedPaths.has(fullPath);
+    li.appendChild(selectBox);
 
     const nameSpan = document.createElement("span");
     nameSpan.className = "file-name";
@@ -145,7 +156,6 @@ async function renderFiles(files) {
       li.appendChild(metaSpan);
     }
 
-    const fullPath = item.folderPath + "/" + item.name;
     const { data: signedUrl, error: urlError } = await supabaseClient.storage
       .from("documents")
       .createSignedUrl(fullPath, 300);
@@ -195,6 +205,81 @@ document.getElementById("archSearchInput").addEventListener("input", function ()
   const term = this.value.toLowerCase();
   const filtered = allFiles.filter((item) => item.name.toLowerCase().includes(term));
   renderFiles(filtered);
+});
+
+const bulkFileListEl = document.getElementById("archFileList");
+const bulkSelectAllEl = document.getElementById("bulkSelectAll");
+const bulkCountEl = document.getElementById("bulkCount");
+const bulkDownloadBtn = document.getElementById("bulkDownloadBtn");
+const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+
+function currentDeletable() {
+  const dept = document.getElementById("archDeptSelect").value;
+  return dept === "Shared"
+    ? currentRole === "executive"
+    : dept === currentDept;
+}
+
+function updateBulkBar() {
+  const count = selectedPaths.size;
+  bulkCountEl.textContent = count + " selected";
+  bulkDownloadBtn.disabled = count === 0;
+  bulkDeleteBtn.disabled = count === 0 || !currentDeletable();
+  const visible = bulkFileListEl.querySelectorAll(".file-select");
+  bulkSelectAllEl.checked = visible.length > 0 && count === visible.length;
+}
+
+bulkSelectAllEl.addEventListener("change", function () {
+  selectedPaths.clear();
+  bulkFileListEl.querySelectorAll(".file-select").forEach((cb) => {
+    cb.checked = this.checked;
+    if (this.checked) selectedPaths.add(cb.value);
+  });
+  updateBulkBar();
+});
+
+bulkFileListEl.addEventListener("change", (e) => {
+  if (!e.target.classList.contains("file-select")) return;
+  if (e.target.checked) {
+    selectedPaths.add(e.target.value);
+  } else {
+    selectedPaths.delete(e.target.value);
+  }
+  updateBulkBar();
+});
+
+bulkDownloadBtn.addEventListener("click", async () => {
+  const paths = Array.from(selectedPaths);
+  for (const fullPath of paths) {
+    const { data } = await supabaseClient.storage
+      .from("documents")
+      .createSignedUrl(fullPath, 300);
+    if (data?.signedUrl) {
+      const a = document.createElement("a");
+      a.href = data.signedUrl;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.click();
+    }
+  }
+});
+
+bulkDeleteBtn.addEventListener("click", async () => {
+  const paths = Array.from(selectedPaths);
+  if (!paths.length) return;
+  const confirmed = confirm("Delete " + paths.length + " selected file(s)? This cannot be undone.");
+  if (!confirmed) return;
+
+  const { error } = await supabaseClient.storage
+    .from("documents")
+    .remove(paths);
+
+  if (error) {
+    alert("Delete failed: " + error.message);
+  } else {
+    selectedPaths.clear();
+    loadFiles();
+  }
 });
 
 loadArchive();
