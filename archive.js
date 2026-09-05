@@ -1,9 +1,22 @@
 let allFiles = [];
 let renderVersion = 0;
+let currentDept = "";
+let currentRole = "";
 
 async function loadArchive() {
   const user = await requireAuth();
   if (!user) return;
+
+  const { data: profile } = await supabaseClient
+    .from("profiles")
+    .select("department, role")
+    .eq("user_id", user.id)
+    .single();
+
+  if (profile) {
+    currentDept = profile.department;
+    currentRole = profile.role;
+  }
 
   await loadDepartments();
   loadFiles();
@@ -72,6 +85,12 @@ async function renderFiles(files) {
     return;
   }
 
+  const dept = document.getElementById("archDeptSelect").value;
+  const folder = document.getElementById("archFolderSelect").value;
+  const canDelete = dept === "Shared"
+    ? currentRole === "executive"
+    : dept === currentDept;
+
   for (const item of files) {
     if (currentRender !== renderVersion) return;
 
@@ -93,8 +112,6 @@ async function renderFiles(files) {
       li.appendChild(metaSpan);
     }
 
-    const dept = document.getElementById("archDeptSelect").value;
-    const folder = document.getElementById("archFolderSelect").value;
     const { data: signedUrl, error: urlError } = await supabaseClient.storage
       .from("documents")
       .createSignedUrl(dept + "/" + folder + "/" + item.name, 300);
@@ -108,8 +125,32 @@ async function renderFiles(files) {
       li.appendChild(downloadLink);
     }
 
+    if (canDelete) {
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "Delete";
+      delBtn.addEventListener("click", () =>
+        deleteFile(dept + "/" + folder + "/" + item.name)
+      );
+      li.appendChild(delBtn);
+    }
+
     if (currentRender !== renderVersion) return;
     listEl.appendChild(li);
+  }
+}
+
+async function deleteFile(fullPath) {
+  const confirmed = confirm("Delete this file? This cannot be undone.");
+  if (!confirmed) return;
+
+  const { error } = await supabaseClient.storage
+    .from("documents")
+    .remove([fullPath]);
+
+  if (error) {
+    alert("Delete failed: " + error.message);
+  } else {
+    loadFiles();
   }
 }
 
