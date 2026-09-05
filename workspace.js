@@ -119,7 +119,13 @@ async function loadFiles() {
     .from("documents")
     .list(path, { limit: 100 });
 
-  if (error || !data || data.length === 0) {
+  if (error) {
+    currentFiles = [];
+    fileListEl.innerHTML = "<li>Error loading files: " + error.message + "</li>";
+    return;
+  }
+
+  if (!data || data.length === 0) {
     currentFiles = [];
     fileListEl.innerHTML = "<li>No files yet.</li>";
     return;
