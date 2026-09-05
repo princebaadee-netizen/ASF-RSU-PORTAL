@@ -125,11 +125,9 @@ async function loadFiles() {
     return;
   }
 
-  console.log("[loadFiles] path:", JSON.stringify(path), "returned:", data);
-
   if (!data || data.length === 0) {
     currentFiles = [];
-    fileListEl.innerHTML = "<li>No files yet.</li><li>Debug: list('" + path + "') returned " + (data ? data.length : "null") + " item(s).</li>";
+    fileListEl.innerHTML = "<li>No files yet.</li>";
     return;
   }
 
