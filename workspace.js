@@ -4,6 +4,9 @@ let viewingDepartment = "";
 let viewingIsShared = false;
 let currentFiles = [];
 let renderVersion = 0;
+let rootFolderNames = null;
+let currentDepartmentStorage = "";
+let viewDepartmentStorage = "";
 
 async function loadWorkspace() {
   const user = await requireAuth();
@@ -26,8 +29,48 @@ async function loadWorkspace() {
   document.getElementById("deptTitle").textContent = currentDepartment + " Workspace";
 
   await loadDepartmentList();
+  await discoverRootFolders();
+  currentDepartmentStorage = resolveFolderName(currentDepartment);
+  viewDepartmentStorage = resolveFolderName(viewingDepartment);
   updateUploadVisibility();
   loadFiles();
+}
+
+async function discoverRootFolders() {
+  const { data, error } = await supabaseClient.storage
+    .from("documents")
+    .list("", { limit: 200 });
+
+  if (error || !data) {
+    rootFolderNames = [];
+    return;
+  }
+
+  rootFolderNames = data
+    .filter((item) => item.metadata === null && item.name && item.name !== "Shared")
+    .map((item) => item.name);
+}
+
+function resolveFolderName(displayName) {
+  if (!rootFolderNames || rootFolderNames.length === 0) return displayName;
+
+  const exact = rootFolderNames.find((f) => f === displayName);
+  if (exact) return exact;
+
+  const lower = displayName.toLowerCase();
+  const caseInsensitive = rootFolderNames.find((f) => f.toLowerCase() === lower);
+  if (caseInsensitive) return caseInsensitive;
+
+  const fuzzy = rootFolderNames.find((f) => {
+    const a = f.toLowerCase();
+    const b = lower;
+    return a.length >= 4 && b.length >= 4
+      ? a.startsWith(b) || b.startsWith(a)
+      : a === b;
+  });
+  if (fuzzy) return fuzzy;
+
+  return displayName;
 }
 
 async function loadDepartmentList() {
@@ -92,6 +135,7 @@ async function loadDepartmentList() {
     const val = switcher.value;
     viewingIsShared = val === "Shared";
     viewingDepartment = val;
+    viewDepartmentStorage = viewingIsShared ? "Shared" : resolveFolderName(viewingDepartment);
     document.getElementById("deptTitle").textContent = viewingIsShared
       ? "Shared (Fellowship-wide)"
       : viewingDepartment + (viewingDepartment !== currentDepartment ? " (viewing)" : " Workspace");
@@ -139,7 +183,7 @@ let currentFilesBasePath = "";
 async function loadFiles() {
   renderVersion++;
   const folder = document.getElementById("viewFolderSelect").value;
-  const path = viewingIsShared ? "Shared/" + folder : viewingDepartment + "/" + folder;
+  const path = viewingIsShared ? "Shared/" + folder : viewDepartmentStorage + "/" + folder;
   currentFilesBasePath = path;
 
   const fileListEl = document.getElementById("fileList");
@@ -271,7 +315,7 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
         .split(/[\\/]/)
         .map((part) => part.replace(/[^a-zA-Z0-9._ -]/g, "_").trim())
         .filter(Boolean);
-      const filePath = (viewingIsShared ? "Shared" : currentDepartment) + "/" + folder + "/" + pathParts.join("/");
+      const filePath = (viewingIsShared ? "Shared" : currentDepartmentStorage) + "/" + folder + "/" + pathParts.join("/");
 
       if (!pathParts.length) {
         failedFiles.push(file.name || "Unnamed file");
