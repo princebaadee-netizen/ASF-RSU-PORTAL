@@ -449,8 +449,8 @@ th {
   color: var(--green-mid);
 }
 
-/* Auth guard — hide content until session is verified */
-body:not(.authed) > main {
+/* Auth guard — hide content on protected pages until session is verified */
+body[data-protected]:not(.authed) > main {
   opacity: 0;
   pointer-events: none;
 }

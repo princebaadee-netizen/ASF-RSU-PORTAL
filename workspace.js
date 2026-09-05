@@ -34,11 +34,6 @@ async function loadDepartmentList() {
   const switcherSection = document.getElementById("deptSwitcher").closest(".workspace-section");
   const switcher = document.getElementById("deptSwitcher");
 
-  if (currentRole !== "executive") {
-    switcherSection.style.display = "none";
-    return;
-  }
-
   switcherSection.style.display = "";
 
   const { data, error } = await supabaseClient
