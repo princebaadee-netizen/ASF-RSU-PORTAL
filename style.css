@@ -19,6 +19,14 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+img {
+  max-width: 100%;
+}
+
 body {
   margin: 0;
   padding-top: 80px;
@@ -37,8 +45,8 @@ h1, h2, h3 {
   margin: 0 0 0.6em;
 }
 
-h1 { font-size: 2rem; }
-h2 { font-size: 1.35rem; margin-top: 2rem; }
+h1 { font-size: clamp(1.75rem, 5vw, 2.25rem); }
+h2 { font-size: clamp(1.2rem, 3vw, 1.4rem); margin-top: 2rem; }
 
 p {
   max-width: 65ch;
@@ -112,35 +120,40 @@ nav a:hover, nav a:focus-visible {
   border-bottom-color: transparent;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   body {
-    padding-top: 145px;
+    padding-top: 140px;
   }
 
   header {
     flex-direction: column;
-    gap: 0;
-    padding: 0.75rem 1rem 0;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem 0.25rem;
   }
 
   .logo {
-    width: 80px;
-    height: 56px;
+    width: 76px;
+    height: 54px;
   }
 
   nav {
     width: 100%;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 0.75rem 1.25rem;
-    padding: 0.75rem 0 1rem;
+    gap: 0.6rem 1.1rem;
+    padding: 0.5rem 0 0.9rem;
+  }
+
+  nav a {
+    padding: 0.25rem 0;
   }
 }
 
 main {
-  max-width: 960px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 2.5rem 1.5rem 4rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 3vw, 1.5rem) 4rem;
+  width: 100%;
 }
 
 /* Home page sections */
@@ -152,7 +165,7 @@ main {
 }
 
 .hero h1 {
-  font-size: 2.5rem;
+  font-size: clamp(2rem, 6vw, 2.8rem);
   max-width: 16ch;
 }
 
@@ -370,14 +383,24 @@ li button {
   background: transparent;
   color: var(--danger);
   border: 1px solid var(--danger);
-  padding: 0.25rem 0.65rem;
+  padding: 0.35rem 0.65rem;
   font-size: 0.8rem;
-  margin-left: 0.75rem;
+  margin-left: 0.4rem;
 }
 
 li button:hover {
   background: var(--danger);
   color: #fff;
+}
+
+ul li a {
+  color: var(--green-mid);
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+
+ul li a:hover {
+  border-bottom-color: var(--gold);
 }
 
 /* File / member lists */
@@ -406,6 +429,14 @@ ul li:last-child, ol li:last-child {
 .file-name {
   font-weight: 500;
   color: var(--text);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+ul li > a,
+li button {
+  flex-shrink: 0;
 }
 
 .file-meta {
@@ -620,7 +651,7 @@ body.authed > main {
 /* Footer */
 
 footer {
-  max-width: 960px;
+  max-width: 1080px;
   margin: 3rem auto 0;
   padding: 1.5rem;
   border-top: 1px solid var(--border);
@@ -680,11 +711,16 @@ footer a:hover {
   .dashboard-links button {
     width: 100%;
     text-align: center;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .login-box {
     margin: 2rem 1rem;
     padding: 1.5rem;
+    width: auto;
   }
 
   main {
@@ -695,20 +731,113 @@ footer a:hover {
     font-size: 0.85rem;
     display: block;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    width: max-content;
+    min-width: 100%;
   }
 
   th, td {
-    padding: 0.5rem;
-    white-space: nowrap;
+    padding: 0.5rem 0.65rem;
+    min-height: 44px;
   }
 
   ul li {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.35rem;
+    gap: 0.4rem;
+    padding: 0.75rem;
   }
 
-  .file-meta {
+  ul li > a,
+  li button {
+    min-height: 42px;
+    min-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  ul li > a {
+    border: 1px solid var(--border);
+    background: transparent;
+    margin-top: 0.15rem;
+  }
+
+  .file-meta,
+  .file-subfolder {
     flex-basis: auto;
+  }
+
+  button,
+  .button-link,
+  input[type="email"],
+  input[type="password"],
+  input[type="text"],
+  input[type="file"],
+  select {
+    min-height: 44px;
+  }
+
+  .preview-box {
+    width: 100%;
+    height: 92vh;
+    max-height: 92vh;
+  }
+
+  .preview-body iframe {
+    height: 72vh;
+  }
+
+  footer {
+    padding: 1.25rem 1rem;
+  }
+}
+
+/* Small phones */
+
+@media (max-width: 420px) {
+  .bulk-bar {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .bulk-bar button {
+    min-height: 44px;
+  }
+
+  .bulk-select-all {
+    justify-content: center;
+  }
+
+  .steps li {
+    padding-left: 2.5rem;
+  }
+
+  .steps li::before {
+    width: 1.7rem;
+    height: 1.7rem;
+  }
+
+  .login-box {
+    padding: 1.25rem;
+  }
+}
+
+/* Tablet refinements */
+
+@media (min-width: 601px) and (max-width: 900px) {
+  main {
+    padding: 2rem 1.25rem 3.5rem;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  table {
+    font-size: 0.85rem;
   }
 }
