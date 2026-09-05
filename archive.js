@@ -37,6 +37,11 @@ async function loadDepartments() {
     return;
   }
 
+  const placeholderOpt = document.createElement("option");
+  placeholderOpt.value = "";
+  placeholderOpt.textContent = "Select a department...";
+  select.appendChild(placeholderOpt);
+
   const sharedOpt = document.createElement("option");
   sharedOpt.value = "Shared";
   sharedOpt.textContent = "Shared (Fellowship-wide)";
@@ -51,8 +56,14 @@ async function loadDepartments() {
 
   const optionValues = Array.from(select.querySelectorAll("option"))
     .map((o) => o.value)
-    .filter(Boolean);
+    .filter((o) => o !== "");
   currentDept = matchDepartmentName(currentDept, optionValues);
+  if (!Array.from(select.options).some((o) => o.value === currentDept)) {
+    const fallbackOpt = document.createElement("option");
+    fallbackOpt.value = currentDept;
+    fallbackOpt.textContent = currentDept;
+    select.appendChild(fallbackOpt);
+  }
   select.value = currentDept;
   const currentTitle = document.getElementById("archTitle");
   if (currentTitle) currentTitle.textContent = currentDept + " Archive";

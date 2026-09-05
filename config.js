@@ -44,24 +44,41 @@ async function discoverRootFolders() {
       .map((item) => item.name);
 }
 
+function normalizeName(name) {
+  return (name || "")
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function bestPrefixMatch(name, candidates) {
+  const target = normalizeName(name);
+  if (!target) return null;
+  let best = null;
+  let bestLen = 0;
+  for (const candidate of candidates) {
+    const c = normalizeName(candidate);
+    let i = 0;
+    while (i < c.length && i < target.length && c[i] === target[i]) i++;
+    if (i > bestLen) {
+      bestLen = i;
+      best = candidate;
+    }
+  }
+  return bestLen >= 5 ? best : null;
+}
+
 function resolveFolderName(displayName) {
   if (!rootFolderNames || rootFolderNames.length === 0) return displayName;
+  if (rootFolderNames.includes(displayName)) return displayName;
 
-  const exact = rootFolderNames.find((f) => f === displayName);
-  if (exact) return exact;
-
-  const lower = displayName.toLowerCase();
-  const caseInsensitive = rootFolderNames.find((f) => f.toLowerCase() === lower);
+  const target = normalizeName(displayName);
+  const caseInsensitive = rootFolderNames.find((f) => normalizeName(f) === target);
   if (caseInsensitive) return caseInsensitive;
 
-  const fuzzy = rootFolderNames.find((f) => {
-    const a = f.toLowerCase();
-    const b = lower;
-    return a.length >= 4 && b.length >= 4
-      ? a.startsWith(b) || b.startsWith(a)
-      : a === b;
-  });
-  if (fuzzy) return fuzzy;
+  const prefix = bestPrefixMatch(displayName, rootFolderNames);
+  if (prefix) return prefix;
 
   return displayName;
 }
@@ -70,16 +87,14 @@ function matchDepartmentName(name, optionValues) {
   if (!name) return "";
   if (optionValues.includes(name)) return name;
 
-  const lower = name.toLowerCase();
-  const caseInsensitive = optionValues.find((o) => o.toLowerCase() === lower);
+  const target = normalizeName(name);
+  const caseInsensitive = optionValues.find((o) => normalizeName(o) === target);
   if (caseInsensitive) return caseInsensitive;
 
-  const fuzzy = optionValues.find((o) => {
-    const a = o.toLowerCase();
-    const b = lower;
-    return a.length >= 4 && b.length >= 4 && (a.startsWith(b) || b.startsWith(a));
-  });
-  return fuzzy || name;
+  const prefix = bestPrefixMatch(name, optionValues);
+  if (prefix) return prefix;
+
+  return name;
 }
 
 async function deepListStorage(folderPath, depth = 0) {

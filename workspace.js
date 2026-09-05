@@ -30,10 +30,17 @@ async function loadWorkspace() {
   await discoverRootFolders();
   const optionValues = Array.from(document.querySelectorAll("#deptSwitcher option"))
     .map((o) => o.value)
-    .filter(Boolean);
+    .filter((o) => o !== "");
   currentDepartment = matchDepartmentName(profile.department, optionValues);
   viewingDepartment = currentDepartment;
-  document.getElementById("deptSwitcher").value = currentDepartment;
+  const switcherEl = document.getElementById("deptSwitcher");
+  if (!Array.from(switcherEl.options).some((o) => o.value === currentDepartment)) {
+    const fallbackOpt = document.createElement("option");
+    fallbackOpt.value = currentDepartment;
+    fallbackOpt.textContent = currentDepartment;
+    switcherEl.appendChild(fallbackOpt);
+  }
+  switcherEl.value = currentDepartment;
   currentDepartmentStorage = resolveFolderName(currentDepartment);
   viewDepartmentStorage = resolveFolderName(viewingDepartment);
   updateUploadVisibility();
@@ -57,6 +64,11 @@ async function loadDepartmentList() {
     switcher.innerHTML = "<option>Could not load departments</option>";
     return;
   }
+
+  const placeholderOpt = document.createElement("option");
+  placeholderOpt.value = "";
+  placeholderOpt.textContent = "Select a department...";
+  switcher.appendChild(placeholderOpt);
 
   const sharedOpt = document.createElement("option");
   sharedOpt.value = "Shared";
