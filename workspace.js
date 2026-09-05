@@ -216,6 +216,11 @@ async function renderFileList(files) {
       .from("documents")
       .createSignedUrl(fullPath, 300);
 
+    const viewBtn = document.createElement("button");
+    viewBtn.textContent = "View";
+    viewBtn.addEventListener("click", () => openFilePreview(fullPath, item.name));
+    li.appendChild(viewBtn);
+
     if (!urlError && signedUrl?.signedUrl) {
       const downloadLink = document.createElement("a");
       downloadLink.href = signedUrl.signedUrl;

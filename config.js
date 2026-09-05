@@ -123,3 +123,86 @@ async function deepListStorage(folderPath, depth = 0) {
 
   return { files };
 }
+
+function canPreviewFileName(name) {
+  const ext = (name.split(".").pop() || "").toLowerCase();
+  return ["pdf", "jpg", "jpeg", "png", "gif", "webp", "txt", "csv", "md", "json", "svg"].includes(ext);
+}
+
+async function openFilePreview(fullPath, fileName) {
+  const existing = document.getElementById("filePreviewModal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "filePreviewModal";
+  modal.className = "preview-modal";
+
+  const box = document.createElement("div");
+  box.className = "preview-box";
+
+  const head = document.createElement("div");
+  head.className = "preview-head";
+
+  const title = document.createElement("span");
+  title.className = "preview-title";
+  title.textContent = fileName;
+
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "preview-close";
+  closeBtn.textContent = "Close";
+  closeBtn.addEventListener("click", () => modal.remove());
+
+  head.appendChild(title);
+  head.appendChild(closeBtn);
+
+  const body = document.createElement("div");
+  body.className = "preview-body";
+  body.innerHTML = '<div class="preview-loading">Loading preview...</div>';
+
+  const footer = document.createElement("div");
+  footer.className = "preview-footer";
+
+  const downloadBtn = document.createElement("a");
+  downloadBtn.className = "btn";
+  downloadBtn.textContent = "Download";
+  downloadBtn.target = "_blank";
+  downloadBtn.rel = "noopener";
+
+  const okBtn = document.createElement("button");
+  okBtn.textContent = "Close";
+  okBtn.addEventListener("click", () => modal.remove());
+
+  footer.appendChild(downloadBtn);
+  footer.appendChild(okBtn);
+
+  box.appendChild(head);
+  box.appendChild(body);
+  box.appendChild(footer);
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+
+  const { data } = await supabaseClient.storage
+    .from("documents")
+    .createSignedUrl(fullPath, 300, { download: false });
+
+  if (!data || !data.signedUrl) {
+    body.innerHTML = '<div class="preview-error">Could not open this file. Try downloading it instead.</div>';
+    return;
+  }
+
+  downloadBtn.href = data.signedUrl;
+
+  if (canPreviewFileName(fileName)) {
+    const iframe = document.createElement("iframe");
+    iframe.src = data.signedUrl;
+    iframe.title = fileName;
+    body.innerHTML = "";
+    body.appendChild(iframe);
+  } else {
+    body.innerHTML = '<div class="preview-error">This file type cannot be previewed in the browser. Use the Download button below.</div>';
+  }
+}
